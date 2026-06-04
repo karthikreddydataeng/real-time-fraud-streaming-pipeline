@@ -1,74 +1,62 @@
-# Real-Time Fraud Streaming Pipeline
+## How to Run
 
-## Overview
+This project is designed so hiring teams can review both the business architecture and the runnable fraud scoring logic.
 
-This project demonstrates a real-time financial transaction streaming pipeline using Apache Kafka, Spark Streaming, Python, SQL, and cloud data warehouse design patterns.
+### 1. Review the Project Design
 
-The pipeline simulates how transaction events can be continuously ingested, processed, enriched, scored for fraud risk, and made available for analytics and monitoring teams.
+Start with these files:
 
-This is a portfolio project created using synthetic data. It does not contain employer-owned code, production data, credentials, or confidential architecture.
+- `architecture/architecture_diagram.md`
+- `docs/pipeline_design.md`
+- `docs/fraud_rules.md`
+- `docs/project_summary_for_recruiters.md`
+- `dashboards/fraud_metrics.md`
 
-## Business Problem
+### 2. Review Sample Input and Output
 
-Financial organizations process large volumes of transaction data every day. Fraud and analytics teams need timely access to transaction patterns so they can detect suspicious activity, monitor risk, and support business reporting.
+Input file:
 
-Traditional batch pipelines may delay fraud visibility. A real-time streaming pipeline helps reduce detection delay by continuously processing transaction events as they arrive.
+- `data/sample_transactions.csv`
 
-## Architecture
+Expected output example:
 
-Synthetic Transaction Events
-→ Kafka Producer
-→ Kafka Topic
-→ Spark Streaming Processor
-→ Fraud Rule Engine
-→ Curated Transaction Output
-→ Cloud Warehouse / Analytics Layer
-→ Fraud Monitoring Dashboard
+- `output/fraud_scored_transactions.csv`
 
-## Tools and Technologies
+Generated output after running the script:
 
-* Apache Kafka
-* Spark Streaming
-* Python
-* SQL
-* Databricks concept
-* AWS Redshift concept
-* Data Warehousing
-* Fraud Rule Processing
-* Real-Time Data Engineering
+- `output/fraud_scored_transactions_generated.csv`
 
-## Key Features
+### 3. Run the Fraud Scoring Script Locally
 
-* Generates synthetic financial transaction events
-* Publishes transaction events into a Kafka-style topic
-* Processes streaming events using Spark Streaming logic
-* Applies fraud detection rules based on transaction behavior
-* Creates curated fraud analytics output
-* Includes SQL schema design for downstream reporting
-* Documents pipeline design for hiring team review
+This project uses built-in Python libraries only.
 
-## Fraud Detection Rules
+Run:
 
-The project includes sample fraud rules such as:
+```bash
+python spark_streaming/fraud_detection_stream.py
+```
 
-* High-value transaction detection
-* Multiple transactions within a short time window
-* Unusual merchant category activity
-* Suspicious country or location pattern
-* Repeated failed transaction attempts
+The script will:
 
-## Example Use Cases
+1. Read synthetic transactions from `data/sample_transactions.csv`
+2. Apply fraud scoring rules
+3. Assign fraud score, risk level, and triggered rule
+4. Write generated results to `output/fraud_scored_transactions_generated.csv`
 
-* Fraud monitoring
-* Real-time transaction analytics
-* Risk scoring
-* Financial operations reporting
-* Downstream analytics for business teams
+## Sample Fraud Logic
 
-## Project Outcome
+The rules are intentionally simple for portfolio review:
 
-This project demonstrates how real-time streaming pipelines can support fraud analytics teams by improving data availability, reducing manual monitoring effort, and enabling faster risk detection.
+- Transactions greater than or equal to 3000 are flagged as high amount risk.
+- Failed transactions are flagged for review.
+- Transactions outside the United States are flagged for location review.
+- High amount transactions outside the United States receive the highest risk score.
 
-## Important Note
+## Design Decisions
 
-This project is a portfolio recreation based on enterprise data engineering patterns. It uses synthetic data and does not include any confidential company information.
+- Kafka and Spark Streaming are represented as enterprise architecture concepts.
+- The main runnable script uses local Python so the project can be tested without complex setup.
+- SQL files show how scored fraud data can be modeled for analytics.
+- Dashboard documentation shows the type of metrics fraud teams may monitor.
+- All data is synthetic and safe for public portfolio use.
+```
