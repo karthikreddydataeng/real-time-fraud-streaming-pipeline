@@ -29,6 +29,17 @@ This project follows a real-time financial data engineering pattern.
 - Analytics-ready output
 - Clear separation between ingestion, processing, warehouse, and reporting layers
 
+## Tools and Technologies
+
+- Python for local fraud scoring logic
+- Apache Kafka concept for real-time transaction ingestion
+- Spark Streaming concept for scalable stream processing
+- AWS SageMaker concept for ML-based fraud risk scoring
+- SQL for fraud analytics table design
+- AWS Redshift concept for warehouse reporting
+- CSV files for sample input and output data
+- Markdown documentation for architecture, fraud rules, and dashboard metrics
+
 ## Note
 
 The runnable version of this project uses local Python execution so hiring teams can review and test the logic without installing Kafka, Spark, or Java.
