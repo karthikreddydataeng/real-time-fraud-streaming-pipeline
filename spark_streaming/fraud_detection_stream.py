@@ -1,81 +1,103 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, current_timestamp
+import csv
+from datetime import datetime
+from pathlib import Path
 
 
-def create_spark_session():
-    return (
-        SparkSession.builder
-        .appName("RealTimeFraudStreamingPipeline")
-        .getOrCreate()
-    )
+INPUT_FILE = Path("data/sample_transactions.csv")
+OUTPUT_FILE = Path("output/fraud_scored_transactions_generated.csv")
 
 
-def apply_fraud_rules(transactions_df):
+def apply_fraud_rules(transaction):
     """
-    Applies sample fraud rules to transaction data.
+    Applies sample fraud rules to one transaction record.
 
-    Rules demonstrated:
-    1. High transaction amount
-    2. Failed transaction status
-    3. Non-primary country review
-    4. Combined high amount and location risk
+    This is a local runnable simulation of fraud scoring logic.
+    In a production streaming pipeline, this same logic can be applied inside
+    Spark Streaming or another distributed processing framework.
     """
 
-    scored_df = (
-        transactions_df
-        .withColumn(
-            "fraud_score",
-            when((col("amount") >= 3000) & (col("country") != "US"), 95)
-            .when(col("amount") >= 3000, 80)
-            .when(col("transaction_status") == "failed", 60)
-            .when(col("country") != "US", 45)
-            .otherwise(10)
-        )
-        .withColumn(
-            "risk_level",
-            when(col("fraud_score") >= 80, "HIGH")
-            .when(col("fraud_score") >= 40, "MEDIUM")
-            .otherwise("LOW")
-        )
-        .withColumn(
-            "rule_triggered",
-            when((col("amount") >= 3000) & (col("country") != "US"), "HIGH_AMOUNT_LOCATION_REVIEW")
-            .when(col("amount") >= 3000, "HIGH_AMOUNT")
-            .when(col("transaction_status") == "failed", "FAILED_TRANSACTION")
-            .when(col("country") != "US", "LOCATION_REVIEW")
-            .otherwise("NONE")
-        )
-        .withColumn("processing_timestamp", current_timestamp())
-    )
+    amount = float(transaction["amount"])
+    country = transaction["country"]
+    status = transaction["transaction_status"]
 
-    return scored_df
+    if amount >= 3000 and country != "US":
+        fraud_score = 95
+        risk_level = "HIGH"
+        rule_triggered = "HIGH_AMOUNT_LOCATION_REVIEW"
+    elif amount >= 3000:
+        fraud_score = 80
+        risk_level = "HIGH"
+        rule_triggered = "HIGH_AMOUNT"
+    elif status == "failed":
+        fraud_score = 60
+        risk_level = "MEDIUM"
+        rule_triggered = "FAILED_TRANSACTION"
+    elif country != "US":
+        fraud_score = 45
+        risk_level = "MEDIUM"
+        rule_triggered = "LOCATION_REVIEW"
+    else:
+        fraud_score = 10
+        risk_level = "LOW"
+        rule_triggered = "NONE"
+
+    transaction["fraud_score"] = fraud_score
+    transaction["risk_level"] = risk_level
+    transaction["rule_triggered"] = rule_triggered
+    transaction["processing_timestamp"] = datetime.utcnow().isoformat()
+
+    return transaction
 
 
-def main():
-    spark = create_spark_session()
+def read_transactions(file_path):
+    with open(file_path, mode="r", newline="") as file:
+        reader = csv.DictReader(file)
+        return list(reader)
 
-    sample_data = [
-        ("TXN100001", "CUST1001", 4500.00, "electronics", "US", "approved"),
-        ("TXN100002", "CUST1002", 120.50, "grocery", "US", "approved"),
-        ("TXN100003", "CUST1003", 850.00, "travel", "GB", "approved"),
-        ("TXN100004", "CUST1004", 75.25, "fuel", "US", "failed"),
-        ("TXN100005", "CUST1005", 3200.00, "online", "IN", "approved")
-    ]
 
-    columns = [
+def write_scored_transactions(file_path, transactions):
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fieldnames = [
         "transaction_id",
         "customer_id",
         "amount",
         "merchant_category",
         "country",
-        "transaction_status"
+        "transaction_status",
+        "transaction_timestamp",
+        "fraud_score",
+        "risk_level",
+        "rule_triggered",
+        "processing_timestamp"
     ]
 
-    transactions_df = spark.createDataFrame(sample_data, columns)
+    with open(file_path, mode="w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(transactions)
 
-    fraud_scored_df = apply_fraud_rules(transactions_df)
 
-    fraud_scored_df.show(truncate=False)
+def main():
+    transactions = read_transactions(INPUT_FILE)
+
+    scored_transactions = [
+        apply_fraud_rules(transaction)
+        for transaction in transactions
+    ]
+
+    write_scored_transactions(OUTPUT_FILE, scored_transactions)
+
+    print(f"Processed {len(scored_transactions)} transactions")
+    print(f"Generated output file: {OUTPUT_FILE}")
+
+    for transaction in scored_transactions:
+        print(
+            transaction["transaction_id"],
+            transaction["fraud_score"],
+            transaction["risk_level"],
+            transaction["rule_triggered"]
+        )
 
 
 if __name__ == "__main__":
