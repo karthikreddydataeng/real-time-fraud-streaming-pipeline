@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project demonstrates a real-time financial transaction fraud monitoring pipeline using synthetic banking transaction data.
+This project demonstrates a real time financial transaction fraud monitoring pipeline using synthetic banking transaction data.
 
 The project shows how transaction records can be ingested, scored using fraud rules, classified by risk level, and prepared for downstream analytics and dashboard reporting.
 
@@ -67,7 +67,7 @@ real-time-fraud-streaming-pipeline/
 
 ## How to Run
 
-This project is designed so hiring teams can review both the business architecture and the runnable fraud scoring logic.
+This project demonstrates the business architecture, synthetic transaction data flow, fraud scoring logic, and analytics-ready output for a real-time fraud monitoring pipeline.
 
 ### 1. Review the Project Design
 
